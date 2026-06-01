@@ -2,7 +2,9 @@ using DiscordRPC;
 var now = DateTime.Now;
 var midnightLocal = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0, DateTimeKind.Local);
 
-string input = args.Length > 0 ? args[0] : null;
+// flag can be set in order var -> cli -> interactive (if available). Fallsback to LGBTQ
+string? input = Environment.GetEnvironmentVariable("PRIDE_FLAG")
+                ?? (args.Length > 0 ? args[0] : null);
 
 if (input == null)
 {
@@ -13,13 +15,15 @@ if (input == null)
 string pic = "";
 string pictext = "";
 
-switch (input)
+switch (input?.Trim().ToLowerInvariant())
 {
     case "1":
+    case "lesbian":
         pic = "lesbianflag";
         pictext = "Lesbian";
         break;
     case "2":
+    case "trans":
         pic = "transflag";
         pictext = "Transgender";
         break;
@@ -51,5 +55,10 @@ client.SetPresence(new RichPresence()
     }
 });
 
-Console.ReadLine();
+// block forever so we can run as a service
+var exit = new ManualResetEventSlim(false);
+AppDomain.CurrentDomain.ProcessExit += (_, _) => exit.Set();
+Console.CancelKeyPress += (_, e) => { e.Cancel = true; exit.Set(); };
+exit.Wait();
+
 client.Dispose();
