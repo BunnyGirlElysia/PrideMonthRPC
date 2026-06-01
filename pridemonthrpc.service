@@ -1,0 +1,32 @@
+# Example systemd *user* service for PrideMonthRPC.
+#
+# Install:
+#   1. Publish the app:   dotnet publish -c Release -o publish
+#   2. Copy it somewhere stable:
+#        mkdir -p ~/.local/share/PrideMonthRPC
+#        cp -r publish/* ~/.local/share/PrideMonthRPC/
+#   3. Install the unit:
+#        mkdir -p ~/.config/systemd/user
+#        cp pridemonthrpc.service ~/.config/systemd/user/
+#   4. Enable + start (and have it come up at every login):
+#        systemctl --user daemon-reload
+#        systemctl --user enable --now pridemonthrpc.service
+#
+# This is a *user* service (systemctl --user), not a system one, because the
+# Discord IPC socket lives in your per-user runtime dir ($XDG_RUNTIME_DIR).
+
+[Unit]
+Description=Pride Month Discord Rich Presence
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+# Pick the flag here: lgbtq (default), lesbian, or trans.
+Environment=PRIDE_FLAG=lgbtq
+ExecStart=%h/.local/share/PrideMonthRPC/PrideMonthRPC
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
